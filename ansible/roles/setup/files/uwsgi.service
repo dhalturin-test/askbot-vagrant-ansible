@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI Emperor service
+
+[Service]
+ExecStartPre=/bin/bash -c 'chmod 755 /home/vagrant; chmod 755 /app; chown nginx:nginx -R /app/htdocs'
+ExecStart=/app/env/bin/uwsgi --ini /etc/app.ini --enable-threads
+Restart=always
+KillSignal=SIGQUIT
+Type=notify
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target

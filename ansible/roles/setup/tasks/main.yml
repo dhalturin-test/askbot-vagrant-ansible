@@ -1,0 +1,75 @@
+---
+#- name: Copy mynginx.pp
+#  copy: src=mynginx.pp dest=~/
+
+- name: Copy nginx.pp
+  copy: src=nginx.pp dest=/root/nginx.pp
+  sudo: yes
+
+- name: Copy nginx.conf
+  copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+  sudo: yes
+
+- name: Copy default.conf
+  copy: src=default.conf dest=/etc/nginx/conf.d/default.conf
+  sudo: yes
+
+- name: Copy uwsgi.service
+  copy: src=uwsgi.service dest=/usr/lib/systemd/system/uwsgi.service
+  sudo: yes
+
+- name: Copy app.ini
+  copy: src=app.ini dest=/etc/app.ini
+  sudo: yes
+
+- git:
+    repo: https://github.com/ASKBOT/askbot-devel.git
+    dest: ~/app
+
+- name: move app
+  command: sudo bash -c 'rm -rf /app && mv {/home/vagrant,}/app'
+
+- name: pip uwsgi
+  pip:
+    name: uwsgi
+    virtualenv: /app/env
+
+- name: pip mysql-python
+  pip:
+    name: mysql-python
+    virtualenv: /app/env
+
+- name: pip requirements
+  pip:
+    requirements: /app/askbot_requirements.txt
+    virtualenv: /app/env
+
+- name: install askbot
+  shell: |
+    test -f installed && exit 0
+    cd env && source bin/activate && cd ..
+    python setup.py install
+    mkdir htdocs && cd htdocs
+    askbot-setup --dir-name=. --db-engine=3 --db-name=test --db-user=test --db-password=''
+    sed "s/ROOT_URLCONF.*/ROOT_URLCONF = 'urls'/"  settings.py -i
+    python manage.py migrate --noinput 2>/dev/null || echo OK
+    python manage.py collectstatic --noinput
+    touch installed
+    sudo chown nginx:nginx -R /app
+    sudo semodule -i /root/nginx.pp
+  args:
+    chdir: /app
+
+# ansible >= 2.2
+#- name: enable uwsgi
+#  systemd:
+#    name: uwsgi
+#    enabled: yes
+#    state: started
+
+- name: enable uwsgi
+  command: sudo systemctl enable uwsgi.service
+- name: start uwsgi
+  command: sudo systemctl start uwsgi.service
+- name: reload nginx
+  command: sudo systemctl reload nginx.service

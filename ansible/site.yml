@@ -1,0 +1,6 @@
+---
+# prepare, deploy and run askbot code
+- hosts: app
+  user: vagrant
+  roles:
+    - setup
