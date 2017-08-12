@@ -1,8 +1,3 @@
-class facts_hash {
-  $virt = $facts['virtual']
-  notify { "I'm using a value !${virt}! ": }
-}
-
 package { 'epel-release' : ensure => present }
 package { 'git' : ensure => present }
 package { 'gcc' : ensure => present }

@@ -2,6 +2,10 @@
 #- name: Copy mynginx.pp
 #  copy: src=mynginx.pp dest=~/
 
+- name: Copy hypervisor_type.rb
+  copy: src=hypervisor_type.rb dest=/usr/share/ruby/vendor_ruby/facter/hypervisor_type.rb
+  sudo: yes
+
 - name: Copy nginx.pp
   copy: src=nginx.pp dest=/root/nginx.pp
   sudo: yes
